@@ -700,7 +700,7 @@ a:focus {
 }
 
 .info_section .info_top {
-  padding: 45px 0;
+  padding: 15px 0;
 }
 
 .info_section h4 {
@@ -804,6 +804,7 @@ a:focus {
   display: -ms-flexbox;
   display: flex;
   margin-top: 25px;
+  margin-left: 55px;
 }
 
 .info_section .info_form .social_box a {
@@ -812,14 +813,14 @@ a:focus {
   display: flex;
   -webkit-box-pack: center;
       -ms-flex-pack: center;
-          justify-content: center;
+          justify-content: right;
   -webkit-box-align: center;
       -ms-flex-align: center;
-          align-items: center;
+          align-items: right;
   border-radius: 5px;
-  width: 45px;
+  width: 100px;
   height: 45px;
-  border: 1px solid #6bb7be;
+  border: 50px solid #6bb7be;
   color: #6bb7be;
   font-size: 18px;
   margin-right: 10px;
