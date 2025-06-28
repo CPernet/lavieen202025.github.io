@@ -1,0 +1,4 @@
+repositories:
+  default:
+    url: https://github.com/CPernet/lavieen202025.github.io.git
+    ref: main
