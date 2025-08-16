@@ -435,6 +435,14 @@ a:focus {
   background-color: #ffffff;
   -webkit-box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.15);
           box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.15);
+  height: 100%;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
 }
 
 .blog_section .box .img-box {
