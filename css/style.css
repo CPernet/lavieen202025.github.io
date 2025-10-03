@@ -78,6 +78,21 @@ body {
   background-color: #ffffff;
 }
 
+/* Social icon margin */
+.social-icon-margin {
+  margin-right: 10px;
+}
+
+/* Custom link style for shownotes */
+.custom-link {
+  color: blue;
+  text-decoration: underline;
+  background: none;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+}
+
 .header_section .container-fluid {
   padding-right: 25px;
   padding-left: 25px;
