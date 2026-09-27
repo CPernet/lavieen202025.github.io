@@ -12,13 +12,17 @@ gonogo_app/
 │   └── go_no_go_task.html
 ├── go/
 │   ├── manifest.json
-│   └── go01_...jpg ... go08_...jpg
+│   └── apple.jpg, hummus.jpg, nuts.jpg, ...
 ├── nogo/
 │   ├── manifest.json
-│   └── nogo01_...jpg ... nogo08_...jpg
+│   └── chocolat.jpg, ecoliers.jpg, fekkas.jpg, ...
 ```
 
-La page charge d’abord les images par défaut à partir des chemins relatifs `../go/...` et `../nogo/...`. Si une image locale ne peut pas être chargée, elle tente de récupérer l’image correspondante sur Wikimedia Commons. Ce recours nécessite une connexion Internet et dépend de la disponibilité du service.
+La page utilise exclusivement les images des dossiers `go/` et `nogo/` du site, listées dans leur fichier `manifest.json`. Aucun service externe ne fournit d’images de remplacement.
+
+Pour ajouter, supprimer ou renommer des images par défaut, mettez aussi à jour le `manifest.json` du dossier concerné, puis publiez les images et le manifeste ensemble. Chaque manifeste doit contenir au moins 6 entrées, par exemple `{"filename": "apple.jpg"}`. Le champ `label` est facultatif. Remplacer le contenu d’une image en conservant son nom ne nécessite aucune modification du manifeste.
+
+La page doit être servie par HTTP ou HTTPS pour charger les manifestes, par exemple sur GitHub Pages. Pour un aperçu local, lancez `python -m http.server 8000` à la racine du dépôt, puis ouvrez `http://localhost:8000/gonogo_app/task/go_no_go_task.html`.
 
 ## Choix des images
 

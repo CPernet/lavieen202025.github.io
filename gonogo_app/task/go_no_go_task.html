@@ -155,7 +155,7 @@
       </div>
 
       <div class="small muted">
-        Les images par défaut sont sous licence CC BY 4.0. <a href="../ATTRIBUTION.html" target="_blank" rel="noopener">Crédits et licences</a>.
+        Les images par défaut sont celles des dossiers Go et No-Go du site. Vous pouvez remplacer une seule catégorie ou les deux par vos propres images.
       </div>
     </section>
 
@@ -207,42 +207,34 @@
 </div>
 
 <script>
-  const CC_AUTHOR = 'Sarah Stierch';
-  const CC_LICENSE = 'CC BY 4.0';
+  const DEFAULT_GO = [];
+  const DEFAULT_NOGO = [];
+  const defaultRequests = new Map();
 
-  function commonsRemote(title) {
-    return 'https://commons.wikimedia.org/wiki/Special:Redirect/file/' + encodeURIComponent(title);
+  function loadDefaults(kind){
+    if(defaultRequests.has(kind)) return defaultRequests.get(kind);
+    const request=(async()=>{
+      const response=await fetch(`../${kind}/manifest.json`,{cache:'no-store'});
+      if(!response.ok) throw new Error(`Impossible de charger le dossier ${kind} (${response.status}).`);
+      const manifest=await response.json();
+      if(!Array.isArray(manifest) || manifest.length<6 || manifest.some(item=>
+        !item || typeof item.filename!=='string' || !item.filename || /[\\/]/.test(item.filename) ||
+        !validExt.some(ext=>item.filename.toLowerCase().endsWith(ext))
+      )) throw new Error(`Le manifeste du dossier ${kind} doit contenir au moins 6 images valides.`);
+      const items=manifest.map((item,i)=>({
+        id:`default-${kind}-${i+1}`, kind:'url', name:item.filename,
+        label:item.label || item.filename,
+        localSrc:`../${kind}/${encodeURIComponent(item.filename)}`, resolvedSrc:null
+      }));
+      const defaults=kind==='go'?DEFAULT_GO:DEFAULT_NOGO;
+      defaults.splice(0,defaults.length,...items);
+      if(kind==='go' && !state.goCustom) state.goItems=[...defaults];
+      if(kind==='nogo' && !state.noGoCustom) state.noGoItems=[...defaults];
+      updateSourceInfo();
+    })().catch(error=>{ defaultRequests.delete(kind); throw error; });
+    defaultRequests.set(kind,request);
+    return request;
   }
-
-  const DEFAULT_GO = [
-    ['go01_apples.jpg', 'Basket of apples - Sarah Stierch.jpg', 'Pommes'],
-    ['go02_salad_hummus.jpg', 'Salad and hummus - 2021-11-20 - Sarah Stierch.jpg', 'Salade et houmous'],
-    ['go03_thanksgiving_salad.jpg', 'Thanksgiving salad - November 2022 - Sarah Stierch.jpg', 'Salade végétale'],
-    ['go04_hummus_vegetables.jpg', 'Black bean hummus and vegetables - 2021-11-20 - Sarah Stierch.jpg', 'Légumes et houmous'],
-    ['go05_yogurt_apricots.jpg', 'Greek Yogurt with Apricots - Zaytinya - March 2018 - Sarah Stierch 01.jpg', 'Yaourt et abricots'],
-    ['go06_lettuce_salad.jpg', 'Young lettuce salad - 2021-11-20 - Sarah Stierch.jpg', 'Salade verte'],
-    ['go07_nicoise.jpg', 'Frenchie Picnic & Provisions - Sarah Stierch - Jan 2019.jpg', 'Salade niçoise'],
-    ['go08_citrus_salad.jpg', 'Sunday Supper Aug 2019 - Stierch 03.jpg', 'Salade et agrumes']
-  ].map(([filename,title,label],i) => ({
-    id:'default-go-'+(i+1), kind:'url', name:filename, label,
-    localSrc:'../go/'+filename, remoteSrc:commonsRemote(title), title,
-    author:CC_AUTHOR, license:CC_LICENSE, resolvedSrc:null
-  }));
-
-  const DEFAULT_NOGO = [
-    ['nogo01_donut.jpg', 'Safeway donut - January 2024 - Sarah Stierch.jpg', 'Donut'],
-    ['nogo02_chips.jpg', 'Chips and salsa at La Casa Restaurant in Sonoma, California - Sarah Stierch 01.jpg', 'Chips'],
-    ['nogo03_lemon_cake.jpg', 'Ultimate Meyer Lemon Cake on the California Zephyr - June 2022 - Sarah Stierch.jpg', 'Gâteau au citron'],
-    ['nogo04_chocolate_dessert.jpg', 'Pub Republic - March 2024 - Sarah Stierch 07.jpg', 'Dessert au chocolat'],
-    ['nogo05_cheesecake.jpg', 'Basque cheesecake - Wit & Wisdom - May 2023 - Sarah Stierch.jpg', 'Cheesecake'],
-    ['nogo06_cookie.jpg', 'Costeaux Petaluma - December 2023 - Sarah Stierch 06.jpg', 'Cookie'],
-    ['nogo07_bread_pudding.jpg', 'Bread pudding - February 2023 - Sarah Stierch 03.jpg', 'Bread pudding'],
-    ['nogo08_pizza.jpg', 'Croccante - October 2023 - Sarah Stierch 08.jpg', 'Pizza']
-  ].map(([filename,title,label],i) => ({
-    id:'default-nogo-'+(i+1), kind:'url', name:filename, label,
-    localSrc:'../nogo/'+filename, remoteSrc:commonsRemote(title), title,
-    author:CC_AUTHOR, license:CC_LICENSE, resolvedSrc:null
-  }));
 
   const state = {
     goItems: [...DEFAULT_GO], noGoItems: [...DEFAULT_NOGO],
@@ -299,7 +291,7 @@
       const used=Math.min(items.length,c.maxItems);
       return `<strong>${items.length} images personnalisées</strong><br><span class="muted">${used} seront utilisées aléatoirement pour une session ${type === 'Go' ? 'Go' : 'No-Go'} ${els.sessionMode.value==='short'?'courte':'standard'}.</span>`;
     }
-    return `<strong>8 images par défaut</strong><br><span class="muted">${CC_AUTHOR}, ${CC_LICENSE}. Chemins relatifs <span class="mono">../${type==='Go'?'go':'nogo'}/</span>, avec repli Wikimedia Commons si les fichiers locaux ne sont pas présents.</span>`;
+    return `<strong>${items.length ? items.length + ' images par défaut' : 'Images par défaut en attente de chargement'}</strong><br><span class="muted">Images du dossier ${type} du site.</span>`;
   }
 
   function updateSourceInfo(){
@@ -362,8 +354,7 @@
       return item.objectUrl;
     }
     if(item.resolvedSrc) return item.resolvedSrc;
-    try{ item.resolvedSrc=await loadImage(item.localSrc); }
-    catch(_){ item.resolvedSrc=await loadImage(item.remoteSrc); }
+    item.resolvedSrc=await loadImage(item.localSrc);
     return item.resolvedSrc;
   }
 
@@ -425,12 +416,16 @@
     if(state.phase==='loading'||state.phase==='running'||state.phase==='practice'||state.phase==='countdown') return;
     const c=modeConfig();
     state.mode=els.sessionMode.value;
-    state.selectedGo=selectItems(state.goItems,practice?Math.min(4,c.maxItems):c.maxItems);
-    state.selectedNoGo=selectItems(state.noGoItems,practice?Math.min(4,c.maxItems):c.maxItems);
     state.phase='loading'; setPhase('Chargement des images'); updateButtons();
     els.messageBox.classList.remove('hidden');
     els.messageBox.innerHTML='<div class="big">Chargement…</div><p class="muted">Préparation des stimuli pour éviter que le temps de chargement n\'affecte les temps de réaction.</p>';
     try{
+      await Promise.all([
+        state.goCustom ? Promise.resolve() : loadDefaults('go'),
+        state.noGoCustom ? Promise.resolve() : loadDefaults('nogo')
+      ]);
+      state.selectedGo=selectItems(state.goItems,practice?Math.min(4,c.maxItems):c.maxItems);
+      state.selectedNoGo=selectItems(state.noGoItems,practice?Math.min(4,c.maxItems):c.maxItems);
       await Promise.all([...state.selectedGo,...state.selectedNoGo].map(resolveItem));
       countdownThenStart(practice);
     }catch(err){
@@ -568,6 +563,8 @@
 
   function updateButtons(){
     const busy=['loading','running','practice','countdown'].includes(state.phase);
+    els.resetBtn.disabled=state.phase==='loading';
+    els.restoreGoBtn.disabled=busy; els.restoreNoGoBtn.disabled=busy;
     els.startBtn.disabled=busy; els.practiceBtn.disabled=busy; els.pickGoBtn.disabled=busy; els.pickNoGoBtn.disabled=busy; els.sessionMode.disabled=busy;
   }
 
@@ -613,6 +610,10 @@
   });
 
   updateProtocolText(); updateSourceInfo(); updateButtons();
+  Promise.all([loadDefaults('go'),loadDefaults('nogo')]).catch(error=>{
+    console.error(error);
+    els.messageBox.innerHTML='<div class="big">Chargement des images par défaut impossible</div><p>Vérifiez les fichiers manifest.json des dossiers Go et No-Go, puis cliquez sur Démarrer pour réessayer.</p>';
+  });
 </script>
 </body>
 </html>
