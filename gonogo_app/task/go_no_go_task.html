@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Entraînement Go / No-Go — La Vie en 2.0</title>
+  <style>
+    :root {
+      --bg: #07111f;
+      --panel: #101827;
+      --panel2: #172033;
+      --text: #edf2f7;
+      --muted: #9eacc1;
+      --accent: #58c7f3;
+      --good: #22c55e;
+      --bad: #ef4444;
+      --warn: #f59e0b;
+      --border: #334155;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #020617, var(--bg));
+      color: var(--text);
+    }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 24px; }
+    h1,h2,h3 { margin: 0 0 12px; }
+    p { line-height: 1.5; }
+    a { color: var(--accent); }
+    .grid { display:grid; grid-template-columns: 365px 1fr; gap:20px; align-items:start; }
+    .card {
+      background: rgba(16,24,39,.94);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.25);
+    }
+    .controls { display:grid; gap:16px; }
+    .small { font-size:13px; }
+    .muted { color:var(--muted); }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .row { display:grid; grid-template-columns:1fr 150px; gap:10px; align-items:center; margin-bottom:10px; }
+    label { color:var(--muted); font-size:14px; }
+    select {
+      width:100%; background:#07111f; color:var(--text); border:1px solid var(--border);
+      border-radius:10px; padding:10px 12px; font-size:14px;
+    }
+    button {
+      border:0; border-radius:12px; padding:11px 14px; font-weight:750; cursor:pointer;
+      background:var(--accent); color:#062638;
+    }
+    button.secondary { background:#1e293b; color:var(--text); border:1px solid var(--border); }
+    button.good { background:var(--good); color:#052e16; }
+    button.bad { background:var(--bad); color:white; }
+    button:disabled { opacity:.5; cursor:not-allowed; }
+    .button-stack { display:grid; gap:9px; }
+    .source-box {
+      background:#07111f; border:1px solid var(--border); border-radius:12px; padding:11px 12px;
+    }
+    .pill-row { display:flex; gap:8px; flex-wrap:wrap; }
+    .pill { background:#07111f; border:1px solid var(--border); border-radius:999px; padding:6px 9px; color:var(--muted); font-size:12px; }
+    .footer-actions { display:flex; gap:10px; flex-wrap:wrap; }
+    .task-area { min-height:720px; display:grid; grid-template-rows:auto 1fr auto; gap:16px; }
+    .status { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; font-size:14px; color:var(--muted); }
+    .stage {
+      min-height:560px; position:relative; display:flex; align-items:center; justify-content:center;
+      background:#020617; border:1px solid var(--border); border-radius:20px; overflow:hidden;
+      touch-action:manipulation; user-select:none;
+    }
+    .center-box { width:100%; padding:28px; text-align:center; }
+    .instruction { max-width:700px; margin:0 auto; }
+    .big { font-size:32px; font-weight:850; margin-bottom:10px; }
+    .fixation { font-size:64px; font-weight:700; color:#d3dae6; }
+    .stimulus-wrap {
+      display:none; align-items:center; justify-content:center; padding:10px; border-radius:22px;
+      border:10px solid transparent; transition:border-color .05s linear;
+    }
+    .stimulus-wrap.go-cue { border-color:var(--good); }
+    .stimulus-wrap.nogo-cue { border-color:var(--bad); }
+    .stimulus { max-width:min(78vw,620px); max-height:430px; object-fit:contain; border-radius:12px; display:block; }
+    .cue-label {
+      position:absolute; top:20px; left:50%; transform:translateX(-50%); font-weight:900; font-size:20px;
+      padding:7px 13px; border-radius:999px; display:none;
+    }
+    .cue-label.go { display:block; background:var(--good); color:#052e16; }
+    .cue-label.nogo { display:block; background:var(--bad); color:white; }
+    .hidden { display:none !important; }
+    .results-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:14px; }
+    .result-box { background:#07111f; border:1px solid var(--border); border-radius:12px; padding:12px; }
+    table { width:100%; border-collapse:collapse; margin-top:14px; font-size:14px; }
+    th,td { border-bottom:1px solid var(--border); padding:8px 6px; text-align:left; }
+    .protocol-note { border-left:3px solid var(--accent); padding-left:12px; }
+    @media (max-width:900px) {
+      .grid { grid-template-columns:1fr; }
+      .task-area { min-height:unset; }
+      .stage { min-height:440px; }
+      .results-grid { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Entraînement Go / No-Go</h1>
+  <p class="muted">Une tâche d'inhibition cue-spécifique inspirée des protocoles de food Go/No-Go training.</p>
+
+  <div class="grid">
+    <section class="card controls">
+      <div>
+        <h2>Protocole</h2>
+        <div class="row">
+          <label for="sessionMode">Durée</label>
+          <select id="sessionMode">
+            <option value="short">Court — 96 essais (~4–5 min)</option>
+            <option value="standard">Standard — 192 essais (~8–10 min)</option>
+          </select>
+        </div>
+        <p id="protocolDescription" class="small muted protocol-note"></p>
+      </div>
+
+      <div>
+        <h3>Images Go</h3>
+        <div id="goSourceInfo" class="source-box small"></div>
+        <div class="button-stack" style="margin-top:8px">
+          <button id="pickGoBtn" class="secondary">Choisir un dossier Go</button>
+          <button id="restoreGoBtn" class="secondary hidden">Revenir aux images Go par défaut</button>
+        </div>
+      </div>
+
+      <div>
+        <h3>Images No-Go</h3>
+        <div id="noGoSourceInfo" class="source-box small"></div>
+        <div class="button-stack" style="margin-top:8px">
+          <button id="pickNoGoBtn" class="secondary">Choisir un dossier No-Go</button>
+          <button id="restoreNoGoBtn" class="secondary hidden">Revenir aux images No-Go par défaut</button>
+        </div>
+      </div>
+
+      <div class="pill-row">
+        <span class="pill">50% Go / 50% No-Go</span>
+        <span class="pill">100% de contingence</span>
+        <span class="pill">≥6 expositions / image</span>
+        <span class="pill">cue après 100 ms</span>
+      </div>
+
+      <div class="footer-actions">
+        <button id="startBtn" class="good">Démarrer</button>
+        <button id="practiceBtn" class="secondary">Essai d'entraînement (8)</button>
+        <button id="resetBtn" class="bad">Réinitialiser</button>
+      </div>
+
+      <div class="small muted">
+        Les dossiers personnalisés doivent contenir au moins <strong>6 images</strong>. En session courte, 8 images maximum par catégorie sont tirées au hasard; en session standard, 16 maximum. Les images supplémentaires pourront donc être utilisées lors d'une autre session.
+      </div>
+
+      <div class="small muted">
+        Les images par défaut sont sous licence CC BY 4.0. <a href="../ATTRIBUTION.html" target="_blank" rel="noopener">Crédits et licences</a>.
+      </div>
+    </section>
+
+    <section class="card task-area">
+      <div class="status">
+        <div>Phase : <span id="phaseLabel">Prêt</span></div>
+        <div>Bloc : <span id="blockLabel">0 / 0</span></div>
+        <div>Essai : <span id="trialLabel">0 / 0</span></div>
+        <div>Précision : <span id="scoreLabel">—</span></div>
+      </div>
+
+      <div class="stage" id="stage">
+        <div id="messageBox" class="center-box">
+          <div class="instruction">
+            <div class="big">Prêt</div>
+            <p>Quand le cadre devient <strong style="color:#22c55e">vert</strong>, appuyez sur <span class="mono">Espace</span> ou touchez l'image.</p>
+            <p>Quand le cadre devient <strong style="color:#ef4444">rouge</strong>, ne faites rien.</p>
+            <p class="small muted">Les images cibles No-Go restent toujours associées à STOP pendant la session.</p>
+          </div>
+        </div>
+        <div id="fixation" class="fixation hidden">+</div>
+        <div id="stimulusWrap" class="stimulus-wrap">
+          <img id="stimulus" class="stimulus" alt="stimulus" />
+        </div>
+        <div id="cueLabel" class="cue-label"></div>
+      </div>
+
+      <div id="resultsBox" class="hidden">
+        <h2>Résultats</h2>
+        <div class="results-grid">
+          <div class="result-box"><strong>Essais</strong><br><span id="rTotal">0</span></div>
+          <div class="result-box"><strong>Précision globale</strong><br><span id="rAcc">0%</span></div>
+          <div class="result-box"><strong>Go corrects</strong><br><span id="rGoHit">0%</span></div>
+          <div class="result-box"><strong>No-Go correctement inhibés</strong><br><span id="rNoGoCR">0%</span></div>
+          <div class="result-box"><strong>RT médian Go</strong><br><span id="rMedianRt">—</span></div>
+          <div class="result-box"><strong>Fausses alarmes No-Go</strong><br><span id="rFalseAlarms">0</span></div>
+        </div>
+        <table>
+          <thead><tr><th>Bloc</th><th>Précision</th><th>Go</th><th>No-Go</th><th>RT médian</th></tr></thead>
+          <tbody id="blockResultsBody"></tbody>
+        </table>
+        <div class="footer-actions" style="margin-top:16px">
+          <button id="downloadCsvBtn" class="secondary">Télécharger CSV</button>
+          <button id="downloadJsonBtn" class="secondary">Télécharger JSON</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+  const CC_AUTHOR = 'Sarah Stierch';
+  const CC_LICENSE = 'CC BY 4.0';
+
+  function commonsRemote(title) {
+    return 'https://commons.wikimedia.org/wiki/Special:Redirect/file/' + encodeURIComponent(title);
+  }
+
+  const DEFAULT_GO = [
+    ['go01_apples.jpg', 'Basket of apples - Sarah Stierch.jpg', 'Pommes'],
+    ['go02_salad_hummus.jpg', 'Salad and hummus - 2021-11-20 - Sarah Stierch.jpg', 'Salade et houmous'],
+    ['go03_thanksgiving_salad.jpg', 'Thanksgiving salad - November 2022 - Sarah Stierch.jpg', 'Salade végétale'],
+    ['go04_hummus_vegetables.jpg', 'Black bean hummus and vegetables - 2021-11-20 - Sarah Stierch.jpg', 'Légumes et houmous'],
+    ['go05_yogurt_apricots.jpg', 'Greek Yogurt with Apricots - Zaytinya - March 2018 - Sarah Stierch 01.jpg', 'Yaourt et abricots'],
+    ['go06_lettuce_salad.jpg', 'Young lettuce salad - 2021-11-20 - Sarah Stierch.jpg', 'Salade verte'],
+    ['go07_nicoise.jpg', 'Frenchie Picnic & Provisions - Sarah Stierch - Jan 2019.jpg', 'Salade niçoise'],
+    ['go08_citrus_salad.jpg', 'Sunday Supper Aug 2019 - Stierch 03.jpg', 'Salade et agrumes']
+  ].map(([filename,title,label],i) => ({
+    id:'default-go-'+(i+1), kind:'url', name:filename, label,
+    localSrc:'../go/'+filename, remoteSrc:commonsRemote(title), title,
+    author:CC_AUTHOR, license:CC_LICENSE, resolvedSrc:null
+  }));
+
+  const DEFAULT_NOGO = [
+    ['nogo01_donut.jpg', 'Safeway donut - January 2024 - Sarah Stierch.jpg', 'Donut'],
+    ['nogo02_chips.jpg', 'Chips and salsa at La Casa Restaurant in Sonoma, California - Sarah Stierch 01.jpg', 'Chips'],
+    ['nogo03_lemon_cake.jpg', 'Ultimate Meyer Lemon Cake on the California Zephyr - June 2022 - Sarah Stierch.jpg', 'Gâteau au citron'],
+    ['nogo04_chocolate_dessert.jpg', 'Pub Republic - March 2024 - Sarah Stierch 07.jpg', 'Dessert au chocolat'],
+    ['nogo05_cheesecake.jpg', 'Basque cheesecake - Wit & Wisdom - May 2023 - Sarah Stierch.jpg', 'Cheesecake'],
+    ['nogo06_cookie.jpg', 'Costeaux Petaluma - December 2023 - Sarah Stierch 06.jpg', 'Cookie'],
+    ['nogo07_bread_pudding.jpg', 'Bread pudding - February 2023 - Sarah Stierch 03.jpg', 'Bread pudding'],
+    ['nogo08_pizza.jpg', 'Croccante - October 2023 - Sarah Stierch 08.jpg', 'Pizza']
+  ].map(([filename,title,label],i) => ({
+    id:'default-nogo-'+(i+1), kind:'url', name:filename, label,
+    localSrc:'../nogo/'+filename, remoteSrc:commonsRemote(title), title,
+    author:CC_AUTHOR, license:CC_LICENSE, resolvedSrc:null
+  }));
+
+  const state = {
+    goItems: [...DEFAULT_GO], noGoItems: [...DEFAULT_NOGO],
+    goCustom:false, noGoCustom:false,
+    trials:[], currentTrialIndex:-1, phase:'idle', timers:[],
+    runStart:null, stimulusVisible:false, cueVisible:false,
+    imageOnsetTs:null, cueOnsetTs:null, responseCaptured:false,
+    selectedGo:[], selectedNoGo:[], objectUrls:new Set(),
+    mode:'short'
+  };
+
+  const els = Object.fromEntries([
+    'sessionMode','protocolDescription','goSourceInfo','noGoSourceInfo','pickGoBtn','pickNoGoBtn',
+    'restoreGoBtn','restoreNoGoBtn','startBtn','practiceBtn','resetBtn','phaseLabel','blockLabel',
+    'trialLabel','scoreLabel','stage','messageBox','fixation','stimulusWrap','stimulus','cueLabel',
+    'resultsBox','rTotal','rAcc','rGoHit','rNoGoCR','rMedianRt','rFalseAlarms','blockResultsBody',
+    'downloadCsvBtn','downloadJsonBtn'
+  ].map(id => [id, document.getElementById(id)]));
+
+  const validExt = ['.jpg','.jpeg','.png','.webp','.gif','.bmp'];
+  const protocol = {
+    short:    { blocks:3, trialsPerBlock:32, total:96,  perType:48, maxItems:8 },
+    standard: { blocks:6, trialsPerBlock:32, total:192, perType:96, maxItems:16 }
+  };
+  const STIMULUS_MS = 1500;
+  const CUE_DELAY_MS = 100;
+  const ISI_MS = 500;
+  const FIXATION_MS = 250;
+
+  function setPhase(x){ els.phaseLabel.textContent=x; }
+  function shuffle(arr){
+    const a=[...arr];
+    for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+    return a;
+  }
+  function clearTimers(){ state.timers.forEach(clearTimeout); state.timers=[]; }
+  function addTimer(fn,ms){ const id=setTimeout(fn,ms); state.timers.push(id); return id; }
+  function pct(n,d){ return d ? Math.round(100*n/d)+'%' : '0%'; }
+  function median(xs){ if(!xs.length)return null; const s=[...xs].sort((a,b)=>a-b); const m=Math.floor(s.length/2); return s.length%2?s[m]:Math.round((s[m-1]+s[m])/2); }
+  function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
+
+  function modeConfig(){ return protocol[els.sessionMode.value] || protocol.short; }
+
+  function updateProtocolText(){
+    const c=modeConfig();
+    els.protocolDescription.innerHTML = `<strong>${c.total} essais</strong> = ${c.blocks} blocs × 32, avec 16 Go + 16 No-Go par bloc. `+
+      `La session utilise au plus ${c.maxItems} images par catégorie, garantissant au moins 6 présentations de chaque image sélectionnée.`;
+    updateSourceInfo();
+  }
+
+  function sourceText(items,isCustom,type){
+    const c=modeConfig();
+    if(isCustom){
+      const used=Math.min(items.length,c.maxItems);
+      return `<strong>${items.length} images personnalisées</strong><br><span class="muted">${used} seront utilisées aléatoirement pour une session ${type === 'Go' ? 'Go' : 'No-Go'} ${els.sessionMode.value==='short'?'courte':'standard'}.</span>`;
+    }
+    return `<strong>8 images par défaut</strong><br><span class="muted">${CC_AUTHOR}, ${CC_LICENSE}. Chemins relatifs <span class="mono">../${type==='Go'?'go':'nogo'}/</span>, avec repli Wikimedia Commons si les fichiers locaux ne sont pas présents.</span>`;
+  }
+
+  function updateSourceInfo(){
+    els.goSourceInfo.innerHTML=sourceText(state.goItems,state.goCustom,'Go');
+    els.noGoSourceInfo.innerHTML=sourceText(state.noGoItems,state.noGoCustom,'No-Go');
+    els.restoreGoBtn.classList.toggle('hidden',!state.goCustom);
+    els.restoreNoGoBtn.classList.toggle('hidden',!state.noGoCustom);
+  }
+
+  function pickFolder(kind){
+    const picker=document.createElement('input');
+    picker.type='file';
+    picker.multiple=true;
+    picker.accept=validExt.join(',');
+    picker.setAttribute('webkitdirectory','');
+    picker.hidden=true;
+    document.body.appendChild(picker);
+    picker.addEventListener('cancel',()=>picker.remove(),{once:true});
+    picker.addEventListener('change',()=>{
+      // Keep the same scope as the original picker: images directly in this folder.
+      const files=Array.from(picker.files || []).filter(file=>
+        validExt.some(ext=>file.name.toLowerCase().endsWith(ext)) &&
+        (!file.webkitRelativePath || file.webkitRelativePath.split('/').length===2)
+      );
+      const cancelled=!picker.files?.length;
+      picker.remove();
+      if(cancelled) return;
+      if(files.length<6){
+        alert(`Le protocole demande au moins 6 images par catégorie. Ce dossier en contient ${files.length}. La sélection précédente est conservée.`);
+        return;
+      }
+      const items=files.map((file,i)=>({id:`custom-${kind}-${Date.now()}-${i}`,kind:'file',name:file.name,label:file.name,file,objectUrl:null}));
+      if(kind==='go'){ state.goItems=items; state.goCustom=true; }
+      else { state.noGoItems=items; state.noGoCustom=true; }
+      updateSourceInfo();
+    },{once:true});
+    picker.click();
+  }
+
+  function restoreDefaults(kind){
+    if(kind==='go'){ state.goItems=[...DEFAULT_GO]; state.goCustom=false; }
+    else { state.noGoItems=[...DEFAULT_NOGO]; state.noGoCustom=false; }
+    releaseObjectUrls();
+    updateSourceInfo();
+  }
+
+  function loadImage(src){
+    return new Promise((resolve,reject)=>{
+      const img=new Image();
+      img.onload=()=>resolve(src);
+      img.onerror=()=>reject(new Error('load failed'));
+      img.src=src;
+    });
+  }
+
+  async function resolveItem(item){
+    if(item.kind==='file'){
+      if(!item.objectUrl){ item.objectUrl=URL.createObjectURL(item.file); state.objectUrls.add(item.objectUrl); }
+      await loadImage(item.objectUrl);
+      return item.objectUrl;
+    }
+    if(item.resolvedSrc) return item.resolvedSrc;
+    try{ item.resolvedSrc=await loadImage(item.localSrc); }
+    catch(_){ item.resolvedSrc=await loadImage(item.remoteSrc); }
+    return item.resolvedSrc;
+  }
+
+  function releaseObjectUrls(){
+    for(const u of state.objectUrls) URL.revokeObjectURL(u);
+    state.objectUrls.clear();
+    [...state.goItems,...state.noGoItems].forEach(x=>{ if(x.kind==='file') x.objectUrl=null; });
+  }
+
+  function selectItems(pool,maxItems){ return shuffle(pool).slice(0,Math.min(pool.length,maxItems)); }
+
+  function balancedAssignments(items,count){
+    const out=[];
+    const base=Math.floor(count/items.length), rem=count%items.length;
+    const order=shuffle(items);
+    order.forEach((item,i)=>{ const n=base+(i<rem?1:0); for(let k=0;k<n;k++) out.push(item); });
+    return shuffle(out);
+  }
+
+  function balancedTypeSequence(perType){
+    let go=perType, nogo=perType, last=null, run=0, out=[];
+    while(go+nogo>0){
+      let choices=[];
+      if(go>0 && !(last==='go' && run>=3)) choices.push('go');
+      if(nogo>0 && !(last==='nogo' && run>=3)) choices.push('nogo');
+      if(!choices.length) choices = go>0 ? ['go'] : ['nogo'];
+      let pick;
+      if(choices.length===2){
+        const total=go+nogo;
+        pick=Math.random() < go/total ? 'go' : 'nogo';
+      } else pick=choices[0];
+      if(pick==='go') go--; else nogo--;
+      if(pick===last) run++; else { last=pick; run=1; }
+      out.push(pick);
+    }
+    return out;
+  }
+
+  function buildTrials(practice=false){
+    if(practice){
+      const g=balancedAssignments(state.selectedGo,4), n=balancedAssignments(state.selectedNoGo,4);
+      const types=balancedTypeSequence(4); let gi=0,ni=0;
+      return types.map((type,i)=>({type,item:type==='go'?g[gi++]:n[ni++],block:1,blockTrial:i+1,trialIndex:i+1,response:null,correct:null,rtCue:null,rtImage:null}));
+    }
+    const c=modeConfig();
+    const g=balancedAssignments(state.selectedGo,c.perType), n=balancedAssignments(state.selectedNoGo,c.perType);
+    let gi=0,ni=0, trials=[];
+    for(let b=1;b<=c.blocks;b++){
+      const types=balancedTypeSequence(c.trialsPerBlock/2);
+      types.forEach((type,i)=>trials.push({
+        type,item:type==='go'?g[gi++]:n[ni++],block:b,blockTrial:i+1,trialIndex:trials.length+1,
+        response:null,correct:null,rtCue:null,rtImage:null
+      }));
+    }
+    return trials;
+  }
+
+  async function prepareRun(practice=false){
+    if(state.phase==='loading'||state.phase==='running'||state.phase==='practice'||state.phase==='countdown') return;
+    const c=modeConfig();
+    state.mode=els.sessionMode.value;
+    state.selectedGo=selectItems(state.goItems,practice?Math.min(4,c.maxItems):c.maxItems);
+    state.selectedNoGo=selectItems(state.noGoItems,practice?Math.min(4,c.maxItems):c.maxItems);
+    state.phase='loading'; setPhase('Chargement des images'); updateButtons();
+    els.messageBox.classList.remove('hidden');
+    els.messageBox.innerHTML='<div class="big">Chargement…</div><p class="muted">Préparation des stimuli pour éviter que le temps de chargement n\'affecte les temps de réaction.</p>';
+    try{
+      await Promise.all([...state.selectedGo,...state.selectedNoGo].map(resolveItem));
+      countdownThenStart(practice);
+    }catch(err){
+      console.error(err); state.phase='idle'; setPhase('Erreur'); updateButtons();
+      els.messageBox.innerHTML='<div class="big">Une image n\'a pas pu être chargée</div><p>Vérifiez la connexion ou les fichiers du dossier, puis réessayez.</p>';
+    }
+  }
+
+  function countdownThenStart(practice){
+    state.phase='countdown'; setPhase('Décompte'); updateButtons();
+    els.resultsBox.classList.add('hidden');
+    let n=3;
+    const render=()=>{
+      els.messageBox.classList.remove('hidden');
+      els.messageBox.innerHTML=`<div class="big">${practice?'Entraînement':'Session'} dans ${n}</div><p>Vert = répondez. Rouge = inhibez.</p>`;
+    };
+    render();
+    const tick=()=>{ n--; if(n<=0){ startRun(practice); return; } render(); addTimer(tick,1000); };
+    addTimer(tick,1000);
+  }
+
+  function startRun(practice){
+    clearTimers(); hideStimulus();
+    state.trials=buildTrials(practice); state.currentTrialIndex=-1; state.runStart=new Date().toISOString();
+    state.phase=practice?'practice':'running'; setPhase(practice?'Entraînement':'En cours'); updateButtons();
+    nextTrial();
+  }
+
+  function hideStimulus(){
+    els.stimulusWrap.style.display='none'; els.stimulusWrap.classList.remove('go-cue','nogo-cue');
+    els.cueLabel.className='cue-label'; els.cueLabel.textContent='';
+    els.fixation.classList.add('hidden');
+    state.stimulusVisible=false; state.cueVisible=false; state.responseCaptured=false;
+    state.imageOnsetTs=null; state.cueOnsetTs=null;
+  }
+
+  function nextTrial(){
+    clearTimers(); hideStimulus();
+    state.currentTrialIndex++;
+    if(state.currentTrialIndex>=state.trials.length){ finishRun(); return; }
+    const t=state.trials[state.currentTrialIndex];
+    const maxBlock=Math.max(...state.trials.map(x=>x.block));
+    const trialsThisBlock=state.trials.filter(x=>x.block===t.block).length;
+    els.blockLabel.textContent=`${t.block} / ${maxBlock}`;
+    els.trialLabel.textContent=`${t.blockTrial} / ${trialsThisBlock}`;
+    els.messageBox.classList.add('hidden'); els.fixation.classList.remove('hidden');
+    updateScore();
+    addTimer(()=>showStimulus(t),FIXATION_MS);
+  }
+
+  async function showStimulus(t){
+    els.fixation.classList.add('hidden');
+    const src=await resolveItem(t.item);
+    els.stimulus.src=src;
+    els.stimulusWrap.style.display='flex';
+    state.stimulusVisible=true; state.imageOnsetTs=performance.now();
+    addTimer(()=>showCue(t),CUE_DELAY_MS);
+    addTimer(()=>endTrial(),STIMULUS_MS);
+  }
+
+  function showCue(t){
+    if(!state.stimulusVisible) return;
+    state.cueVisible=true; state.cueOnsetTs=performance.now();
+    if(t.type==='go'){
+      els.stimulusWrap.classList.add('go-cue'); els.cueLabel.className='cue-label go'; els.cueLabel.textContent='GO';
+    }else{
+      els.stimulusWrap.classList.add('nogo-cue'); els.cueLabel.className='cue-label nogo'; els.cueLabel.textContent='STOP';
+    }
+  }
+
+  function registerGoResponse(ev){
+    if(!(state.phase==='running'||state.phase==='practice') || !state.stimulusVisible || !state.cueVisible || state.responseCaptured) return;
+    if(ev) ev.preventDefault();
+    const t=state.trials[state.currentTrialIndex], now=performance.now();
+    state.responseCaptured=true;
+    t.rtCue=Math.round(now-state.cueOnsetTs); t.rtImage=Math.round(now-state.imageOnsetTs);
+    if(t.type==='go'){ t.response='go_press'; t.correct=true; }
+    else { t.response='false_alarm'; t.correct=false; }
+    updateScore();
+  }
+
+  function endTrial(){
+    state.stimulusVisible=false; state.cueVisible=false;
+    const t=state.trials[state.currentTrialIndex];
+    if(t.response===null){
+      if(t.type==='go'){ t.response='omission'; t.correct=false; }
+      else { t.response='withhold'; t.correct=true; }
+    }
+    hideStimulus(); updateScore();
+    addTimer(nextTrial,ISI_MS);
+  }
+
+  function handleKey(ev){
+    if(ev.code==='Space' || ev.key===' ' || ev.key==='Spacebar') registerGoResponse(ev);
+  }
+
+  function updateScore(){
+    const done=state.trials.filter(t=>t.correct!==null);
+    els.scoreLabel.textContent=done.length?pct(done.filter(t=>t.correct).length,done.length):'—';
+  }
+
+  function finishRun(){
+    clearTimers(); hideStimulus(); state.phase='finished'; setPhase('Terminé'); updateButtons();
+    els.blockLabel.textContent='—'; els.trialLabel.textContent='—'; showResults();
+  }
+
+  function summary(trials=state.trials){
+    const go=trials.filter(t=>t.type==='go'), ng=trials.filter(t=>t.type==='nogo');
+    const rts=go.filter(t=>t.correct&&Number.isFinite(t.rtCue)).map(t=>t.rtCue);
+    return {
+      total_trials:trials.length,
+      accuracy_percent:trials.length?Math.round(100*trials.filter(t=>t.correct).length/trials.length):0,
+      go_hit_rate_percent:go.length?Math.round(100*go.filter(t=>t.correct).length/go.length):0,
+      no_go_correct_reject_rate_percent:ng.length?Math.round(100*ng.filter(t=>t.correct).length/ng.length):0,
+      false_alarms:ng.filter(t=>t.response==='false_alarm').length,
+      median_go_rt_from_cue_ms:rts.length?median(rts):null
+    };
+  }
+
+  function showResults(){
+    const s=summary();
+    els.rTotal.textContent=s.total_trials; els.rAcc.textContent=s.accuracy_percent+'%';
+    els.rGoHit.textContent=s.go_hit_rate_percent+'%'; els.rNoGoCR.textContent=s.no_go_correct_reject_rate_percent+'%';
+    els.rMedianRt.textContent=s.median_go_rt_from_cue_ms===null?'—':s.median_go_rt_from_cue_ms+' ms'; els.rFalseAlarms.textContent=s.false_alarms;
+    els.blockResultsBody.innerHTML='';
+    [...new Set(state.trials.map(t=>t.block))].forEach(b=>{
+      const x=state.trials.filter(t=>t.block===b), bs=summary(x);
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${b}</td><td>${bs.accuracy_percent}%</td><td>${bs.go_hit_rate_percent}%</td><td>${bs.no_go_correct_reject_rate_percent}%</td><td>${bs.median_go_rt_from_cue_ms??'—'}${bs.median_go_rt_from_cue_ms!==null?' ms':''}</td>`;
+      els.blockResultsBody.appendChild(tr);
+    });
+    els.resultsBox.classList.remove('hidden'); els.messageBox.classList.remove('hidden');
+    els.messageBox.innerHTML='<div class="big">Session terminée</div><p>Les résultats ci-dessous peuvent être exportés pour suivre les sessions.</p>';
+  }
+
+  function updateButtons(){
+    const busy=['loading','running','practice','countdown'].includes(state.phase);
+    els.startBtn.disabled=busy; els.practiceBtn.disabled=busy; els.pickGoBtn.disabled=busy; els.pickNoGoBtn.disabled=busy; els.sessionMode.disabled=busy;
+  }
+
+  function resetAll(){
+    clearTimers(); releaseObjectUrls();
+    state.goItems=[...DEFAULT_GO]; state.noGoItems=[...DEFAULT_NOGO]; state.goCustom=false; state.noGoCustom=false;
+    state.trials=[]; state.selectedGo=[]; state.selectedNoGo=[]; state.currentTrialIndex=-1; state.phase='idle';
+    setPhase('Prêt'); els.blockLabel.textContent='0 / 0'; els.trialLabel.textContent='0 / 0'; els.scoreLabel.textContent='—';
+    els.resultsBox.classList.add('hidden'); hideStimulus();
+    els.messageBox.classList.remove('hidden');
+    els.messageBox.innerHTML='<div class="instruction"><div class="big">Prêt</div><p>Vert = appuyez sur <span class="mono">Espace</span> ou touchez l\'image.</p><p>Rouge = ne faites rien.</p></div>';
+    updateProtocolText(); updateButtons();
+  }
+
+  function csvCell(v){ const s=v==null?'':String(v); return '"'+s.replaceAll('"','""')+'"'; }
+  function stamp(){ const d=new Date(),p=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`; }
+  function downloadText(name,text,type){ const b=new Blob([text],{type}); const u=URL.createObjectURL(b); const a=document.createElement('a'); a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(u); }
+
+  function exportCsv(){
+    const rows=[['run_start','mode','block','block_trial','trial_index','trial_type','stimulus','response','correct','rt_from_cue_ms','rt_from_image_ms'].join(',')];
+    state.trials.forEach(t=>rows.push([state.runStart,state.mode,t.block,t.blockTrial,t.trialIndex,t.type,t.item.name,t.response,t.correct,t.rtCue,t.rtImage].map(csvCell).join(',')));
+    downloadText(`gonogo_${stamp()}.csv`,rows.join('\n'),'text/csv;charset=utf-8');
+  }
+  function exportJson(){
+    const payload={run_start:state.runStart,mode:state.mode,protocol:{ratio:'50/50',stimulus_ms:STIMULUS_MS,cue_delay_ms:CUE_DELAY_MS,isi_ms:ISI_MS,min_repetitions_per_selected_image:6},summary:summary(),trials:state.trials.map(t=>({block:t.block,block_trial:t.blockTrial,trial_index:t.trialIndex,type:t.type,stimulus:t.item.name,response:t.response,correct:t.correct,rt_from_cue_ms:t.rtCue,rt_from_image_ms:t.rtImage}))};
+    downloadText(`gonogo_${stamp()}.json`,JSON.stringify(payload,null,2),'application/json;charset=utf-8');
+  }
+
+  els.sessionMode.addEventListener('change',updateProtocolText);
+  els.pickGoBtn.addEventListener('click',()=>pickFolder('go'));
+  els.pickNoGoBtn.addEventListener('click',()=>pickFolder('nogo'));
+  els.restoreGoBtn.addEventListener('click',()=>restoreDefaults('go'));
+  els.restoreNoGoBtn.addEventListener('click',()=>restoreDefaults('nogo'));
+  els.startBtn.addEventListener('click',()=>prepareRun(false));
+  els.practiceBtn.addEventListener('click',()=>prepareRun(true));
+  els.resetBtn.addEventListener('click',resetAll);
+  els.downloadCsvBtn.addEventListener('click',exportCsv);
+  els.downloadJsonBtn.addEventListener('click',exportJson);
+  window.addEventListener('keydown',handleKey);
+  els.stage.addEventListener('pointerdown',ev=>{
+    if(ev.target.closest('#messageBox')) return;
+    registerGoResponse(ev);
+  });
+
+  updateProtocolText(); updateSourceInfo(); updateButtons();
+</script>
+</body>
+</html>
