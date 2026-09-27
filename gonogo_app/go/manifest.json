@@ -1,74 +1,26 @@
 [
   {
-    "filename": "go01_apples.jpg",
-    "label": "Pommes",
-    "author": "Sarah Stierch",
-    "license": "CC BY 4.0",
-    "license_url": "https://creativecommons.org/licenses/by/4.0/",
-    "source_page": "https://commons.wikimedia.org/wiki/File:Basket_of_apples_-_Sarah_Stierch.jpg",
-    "download_url": "https://commons.wikimedia.org/wiki/Special:Redirect/file/Basket%20of%20apples%20-%20Sarah%20Stierch.jpg"
+    "filename": "apple.jpg"
   },
   {
-    "filename": "go02_salad_hummus.jpg",
-    "label": "Salade et houmous",
-    "author": "Sarah Stierch",
-    "license": "CC BY 4.0",
-    "license_url": "https://creativecommons.org/licenses/by/4.0/",
-    "source_page": "https://commons.wikimedia.org/wiki/File:Salad_and_hummus_-_2021-11-20_-_Sarah_Stierch.jpg",
-    "download_url": "https://commons.wikimedia.org/wiki/Special:Redirect/file/Salad%20and%20hummus%20-%202021-11-20%20-%20Sarah%20Stierch.jpg"
+    "filename": "hummus.jpg"
   },
   {
-    "filename": "go03_thanksgiving_salad.jpg",
-    "label": "Salade végétale",
-    "author": "Sarah Stierch",
-    "license": "CC BY 4.0",
-    "license_url": "https://creativecommons.org/licenses/by/4.0/",
-    "source_page": "https://commons.wikimedia.org/wiki/File:Thanksgiving_salad_-_November_2022_-_Sarah_Stierch.jpg",
-    "download_url": "https://commons.wikimedia.org/wiki/Special:Redirect/file/Thanksgiving%20salad%20-%20November%202022%20-%20Sarah%20Stierch.jpg"
+    "filename": "nuts.jpg"
   },
   {
-    "filename": "go04_hummus_vegetables.jpg",
-    "label": "Légumes et houmous",
-    "author": "Sarah Stierch",
-    "license": "CC BY 4.0",
-    "license_url": "https://creativecommons.org/licenses/by/4.0/",
-    "source_page": "https://commons.wikimedia.org/wiki/File:Black_bean_hummus_and_vegetables_-_2021-11-20_-_Sarah_Stierch.jpg",
-    "download_url": "https://commons.wikimedia.org/wiki/Special:Redirect/file/Black%20bean%20hummus%20and%20vegetables%20-%202021-11-20%20-%20Sarah%20Stierch.jpg"
+    "filename": "oatmeal.jpg"
   },
   {
-    "filename": "go05_yogurt_apricots.jpg",
-    "label": "Yaourt et abricots",
-    "author": "Sarah Stierch",
-    "license": "CC BY 4.0",
-    "license_url": "https://creativecommons.org/licenses/by/4.0/",
-    "source_page": "https://commons.wikimedia.org/wiki/File:Greek_Yogurt_with_Apricots_-_Zaytinya_-_March_2018_-_Sarah_Stierch_01.jpg",
-    "download_url": "https://commons.wikimedia.org/wiki/Special:Redirect/file/Greek%20Yogurt%20with%20Apricots%20-%20Zaytinya%20-%20March%202018%20-%20Sarah%20Stierch%2001.jpg"
+    "filename": "pear.jpg"
   },
   {
-    "filename": "go06_lettuce_salad.jpg",
-    "label": "Salade verte",
-    "author": "Sarah Stierch",
-    "license": "CC BY 4.0",
-    "license_url": "https://creativecommons.org/licenses/by/4.0/",
-    "source_page": "https://commons.wikimedia.org/wiki/File:Young_lettuce_salad_-_2021-11-20_-_Sarah_Stierch.jpg",
-    "download_url": "https://commons.wikimedia.org/wiki/Special:Redirect/file/Young%20lettuce%20salad%20-%202021-11-20%20-%20Sarah%20Stierch.jpg"
+    "filename": "popcorn.jpg"
   },
   {
-    "filename": "go07_nicoise.jpg",
-    "label": "Salade niçoise",
-    "author": "Sarah Stierch",
-    "license": "CC BY 4.0",
-    "license_url": "https://creativecommons.org/licenses/by/4.0/",
-    "source_page": "https://commons.wikimedia.org/wiki/File:Frenchie_Picnic_&_Provisions_-_Sarah_Stierch_-_Jan_2019.jpg",
-    "download_url": "https://commons.wikimedia.org/wiki/Special:Redirect/file/Frenchie%20Picnic%20%26%20Provisions%20-%20Sarah%20Stierch%20-%20Jan%202019.jpg"
+    "filename": "prot_bar.jpg"
   },
   {
-    "filename": "go08_citrus_salad.jpg",
-    "label": "Salade et agrumes",
-    "author": "Sarah Stierch",
-    "license": "CC BY 4.0",
-    "license_url": "https://creativecommons.org/licenses/by/4.0/",
-    "source_page": "https://commons.wikimedia.org/wiki/File:Sunday_Supper_Aug_2019_-_Stierch_03.jpg",
-    "download_url": "https://commons.wikimedia.org/wiki/Special:Redirect/file/Sunday%20Supper%20Aug%202019%20-%20Stierch%2003.jpg"
+    "filename": "yoghurt.jpg"
   }
 ]
